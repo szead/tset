@@ -30,19 +30,33 @@ ext {
     junitVersion = '5.9.2'
     assertJVersion = '3.24.2'
     logbackVersion = '1.4.6'
+    junitPlatformSuiteVersion = '1.9.2'
+    junitPlatformCucumberVersion = '7.11.2'
+    lombokVersion = '1.18.26'
 }
 
 dependencies {
-    testImplementation "net.serenity-bdd:serenity-core:${serenityCoreVersion}",
+
+    compileOnly "org.projectlombok:lombok:${lombokVersion}"
+    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+
+    testCompileOnly "org.projectlombok:lombok:${lombokVersion}"
+    testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+
+    implementation "ch.qos.logback:logback-classic:${logbackVersion}"
+    implementation "org.slf4j:log4j-over-slf4j:1.6.4"
+
+    implementation "net.serenity-bdd:serenity-core:${serenityCoreVersion}",
             "net.serenity-bdd:serenity-junit5:${serenityCoreVersion}",
             "net.serenity-bdd:serenity-screenplay:${serenityCoreVersion}",
             "net.serenity-bdd:serenity-ensure:${serenityCoreVersion}",
             "net.serenity-bdd:serenity-screenplay-webdriver:${serenityCoreVersion}",
             "net.serenity-bdd:serenity-cucumber:${serenityCoreVersion}",
-            "org.junit.jupiter:junit-jupiter-api:${junitVersion}",
-            "org.assertj:assertj-core:${assertJVersion}",
-            "ch.qos.logback:logback-classic:${logbackVersion}"
-    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+            "net.serenity-bdd:serenity-screenplay-rest:${serenityCoreVersion}"
+    testImplementation "org.junit.platform:junit-platform-suite:${junitPlatformSuiteVersion}"
+    testImplementation "io.cucumber:cucumber-junit-platform-engine:${junitPlatformCucumberVersion}"
+    testImplementation "org.junit.jupiter:junit-jupiter:${junitVersion}",
+            "org.assertj:assertj-core:${assertJVersion}"
 }
 
 test {
@@ -54,3 +68,22 @@ test {
 gradle.startParameter.continueOnFailure = true
 
 test.finalizedBy(aggregate)
+
+tasks.register('pricing', Exec) {
+    commandLine 'sh', '-c', './gradlew clean test ' +
+            '-Dcucumber.filter.tags="@pricing" ' +
+            '-Dfile.encoding=utf-8 ' +
+            '-Denvironment=local'
+}
+
+tasks.register('singleTest', Exec) {
+    commandLine 'sh', '-c', './gradlew clean test ' +
+            '-Dcucumber.filter.tags="@test" ' +
+            '-Dfile.encoding=utf-8 ' +
+            '-Denvironment=local'
+}
+
+tasks.register('showReport', Exec) {
+    commandLine 'sh', '-c', 'open ./target/site/serenity/index.html '
+}
+
